@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Signup - Meesho Clone</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f9f9f9;
+      background-color: #e6f0ff;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -15,95 +15,89 @@
       margin: 0;
     }
 
-    .container {
-      background-color: #fff;
-      padding: 30px 25px;
+    .signup-container {
+      background-color: white;
+      padding: 30px;
       border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-      width: 90%;
-      max-width: 450px;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+      width: 350px;
     }
 
     h2 {
       text-align: center;
       color: #e91e63;
-      margin-bottom: 20px;
-    }
-
-    form {
-      display: flex;
-      flex-direction: column;
-    }
-
-    label {
-      margin-bottom: 5px;
-      font-weight: bold;
     }
 
     input {
+      width: 100%;
       padding: 10px;
-      margin-bottom: 15px;
+      margin: 8px 0;
       border: 1px solid #ccc;
       border-radius: 6px;
-      font-size: 16px;
     }
 
     button {
-      padding: 12px;
+      width: 100%;
       background-color: #e91e63;
       color: white;
+      padding: 12px;
       border: none;
       border-radius: 6px;
       font-size: 16px;
       cursor: pointer;
-      transition: background 0.3s ease;
     }
 
-    button:hover {
+    button[disabled] {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    button:hover:not([disabled]) {
       background-color: #d81b60;
     }
 
-    p {
+    .error {
+      color: red;
+      font-size: 14px;
+      margin-top: 5px;
+      min-height: 18px;
+    }
+
+    .login-link {
       text-align: center;
       margin-top: 15px;
     }
 
-    a {
+    .login-link a {
       color: #e91e63;
       text-decoration: none;
+      font-weight: bold;
     }
 
-    a:hover {
+    .login-link a:hover {
       text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="signup-container">
     <h2>Create Account</h2>
     <form id="signupForm">
-      <label for="name">Name:</label>
-      <input type="text" id="name" name="name" required />
-
-      <label for="email">Email:</label>
-      <input type="email" id="email" name="email" required />
-
-      <label for="mobile">Mobile Number:</label>
-      <input type="tel" id="mobile" name="mobile" pattern="[0-9]{10}" required />
-
-      <label for="password">Password:</label>
-      <input type="password" id="password" name="password" required />
-
-      <label for="confirmPassword">Confirm Password:</label>
-      <input type="password" id="confirmPassword" name="confirmPassword" required />
-
-      <button type="submit">Sign Up</button>
+      <input type="text" id="name" name="name" placeholder="Name" required />
+      <input type="email" id="email" name="email" placeholder="Email" required />
+      <input type="tel" id="mobile" name="mobile" placeholder="Mobile Number" pattern="[0-9]{10}" required />
+      <input type="password" id="password" name="password" placeholder="Password" required />
+      <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm Password" required />
+      <div class="error" id="error"></div>
+      <button type="submit" id="signupBtn">Sign Up</button>
     </form>
-    <p>Already have an account? <a href="login.html">Login here</a></p>
+    <div class="login-link">
+      Already have an account? <a href="login.html">Login</a>
+    </div>
   </div>
 
   <script>
-    document.getElementById("signupForm").addEventListener("submit", function (e) {
+    document.getElementById("signupForm").addEventListener("submit", async function (e) {
       e.preventDefault();
 
       const name = document.getElementById("name").value.trim();
@@ -112,35 +106,45 @@
       const password = document.getElementById("password").value;
       const confirmPassword = document.getElementById("confirmPassword").value;
 
+      const errorDiv = document.getElementById("error");
+      const signupBtn = document.getElementById("signupBtn");
+
+      errorDiv.textContent = "";
+
       if (password !== confirmPassword) {
-        alert("Passwords do not match");
+        errorDiv.textContent = "❌ Passwords do not match!";
         return;
       }
 
-      const userData = { name, email, mobile, password, confirmPassword };
+      signupBtn.disabled = true;
 
-      fetch("http://44.204.201.80:3000/api/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-      })
-      .then((res) => res.json())
-      .then((data) => {
-        alert(data.message);
+      try {
+        const response = await fetch('/signup', {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ name, email, mobile, password, confirmPassword })
+        });
 
-        if (data.user) {
-          // ✅ Save user info to localStorage
-          localStorage.setItem("user", JSON.stringify(data.user));
-          localStorage.setItem("profileName", data.user.name);
+        const data = await response.json();
 
-          // ✅ Redirect to login page
+        if (response.ok) {
+          alert(data.message || "✅ Signup successful! Redirecting to login...");
+          if (data.user) {
+            localStorage.setItem("user", JSON.stringify(data.user));
+            localStorage.setItem("profileName", data.user.name);
+          }
           window.location.href = "login.html";
+        } else {
+          errorDiv.textContent = data.error || "Signup failed.";
         }
-      })
-      .catch((err) => {
-        console.error("Signup failed", err);
-        alert("Error occurred while signing up.");
-      });
+      } catch (err) {
+        console.error("❌ Signup error:", err);
+        errorDiv.textContent = "❌ Network error. Please try again later.";
+      } finally {
+        signupBtn.disabled = false;
+      }
     });
   </script>
 </body>
