@@ -3,13 +3,72 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Contact Us</title>
+  <title>Contact Us - Meesho</title>
+  <link rel="stylesheet" href="css/style.css" />
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f8f9fa;
+      background-color: #f4f9fc;
       margin: 0;
-      padding: 0;
+    }
+
+    .form-container {
+      max-width: 600px;
+      margin: 80px auto;
+      background-color: #fff;
+      padding: 40px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+    }
+
+    .form-container h2 {
+      color: #e91e63;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    form label {
+      font-weight: bold;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    form input,
+    form textarea {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    form textarea {
+      resize: vertical;
+      height: 100px;
+    }
+
+    form button {
+      width: 100%;
+      padding: 12px;
+      background-color: #28a745;
+      color: #fff;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    form button:hover {
+      background-color: #218838;
+    }
+
+    .error {
+      color: red;
+      font-size: 14px;
+      min-height: 18px;
+      margin-bottom: 10px;
     }
 
     .top-bar {
@@ -36,7 +95,6 @@
     .nav-links a {
       color: white;
       text-decoration: none;
-      font-weight: normal;
       font-size: 16px;
     }
 
@@ -44,63 +102,18 @@
       text-decoration: underline;
     }
 
-    .contact-container {
-      max-width: 500px;
-      margin: 40px auto;
-      background-color: #ffffff;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-
-    h2 {
+    footer {
       text-align: center;
+      padding: 20px;
+      background-color: #e0f7fa;
+      margin-top: 40px;
       color: #333;
-      margin-bottom: 25px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: bold;
-    }
-
-    input[type="text"],
-    input[type="email"],
-    textarea {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 20px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-      box-sizing: border-box;
-    }
-
-    textarea {
-      resize: vertical;
-      height: 100px;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      background-color: #28a745;
-      border: none;
-      color: white;
-      font-size: 16px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #218838;
     }
   </style>
 </head>
 <body>
 
-  <!-- ✅ Updated Top Bar -->
+  <!-- Top Bar -->
   <div class="top-bar">
     <div class="logo">Meesho</div>
     <div class="nav-links">
@@ -113,9 +126,10 @@
     </div>
   </div>
 
-  <div class="contact-container">
+  <!-- Contact Form -->
+  <main class="form-container">
     <h2>Contact Us</h2>
-    <form>
+    <form id="contactForm">
       <label for="name">Name</label>
       <input type="text" id="name" name="name" placeholder="Enter your name" required />
 
@@ -125,29 +139,57 @@
       <label for="message">Message</label>
       <textarea id="message" name="message" placeholder="Write your message here..." required></textarea>
 
+      <div class="error" id="error"></div>
+
       <button type="submit">Submit</button>
     </form>
-  </div>
-<script>
-  const form = document.querySelector("form");
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  </main>
 
-    const name = form.name.value.trim();
-    const email = form.email.value.trim();
-    const message = form.message.value.trim();
+  <footer>
+    &copy; 2025 Meesho. All rights reserved.
+  </footer>
 
-    const response = await fetch("/api/contact", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, message }),
+  <script>
+    const form = document.getElementById("contactForm");
+    const errorDiv = document.getElementById("error");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const name = form.name.value.trim();
+      const email = form.email.value.trim();
+      const message = form.message.value.trim();
+
+      if (name.length < 3) {
+        errorDiv.textContent = "Name must be at least 3 characters.";
+        return;
+      }
+
+      if (!email.includes("@") || email.length < 5) {
+        errorDiv.textContent = "Please enter a valid email.";
+        return;
+      }
+
+      if (message.length < 10) {
+        errorDiv.textContent = "Message must be at least 10 characters.";
+        return;
+      }
+
+      try {
+        const response = await fetch("${API_BASE}/contact", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, message }),
+        });
+
+        const result = await response.json();
+        alert(result.message);
+        if (response.ok) form.reset();
+      } catch (err) {
+        errorDiv.textContent = "Something went wrong. Please try again.";
+      }
     });
-
-    const result = await response.json();
-    alert(result.message);
-    if (response.ok) form.reset();
-  });
-</script>
+  </script>
 
 </body>
 </html>
